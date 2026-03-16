@@ -36,12 +36,12 @@ From the repo root:
 
 1) Build the offline bundles:
 ```bash
-python backdoor-game/tools/build_server_repo.py
+python reverse-engineering/backdoor-game/tools/build_server_repo.py
 ```
 
 2) Start the local repo server (default port `8000`):
 ```bash
-python backdoor-game/tools/local_repo_server.py --host 0.0.0.0 --port 8000
+python reverse-engineering/backdoor-game/tools/local_repo_server.py --host 0.0.0.0 --port 8000
 ```
 
 It serves:
@@ -50,7 +50,7 @@ It serves:
 
 3) Start the telemetry listener dashboard (default port `9000`):
 ```bash
-python backdoor-game/tools/telemetry_listener.py --host 0.0.0.0 --port 9000
+python reverse-engineering/backdoor-game/tools/telemetry_listener.py --host 0.0.0.0 --port 9000
 ```
 
 Open:
@@ -60,12 +60,12 @@ Open:
 
 Run the game (fullscreen by default):
 ```bash
-python backdoor-game/run_rca_defender.py --repo-url http://<server-ip>:8000 --listener-url http://<listener-ip>:9000
+python reverse-engineering/backdoor-game/run_rca_defender.py --repo-url http://<server-ip>:8000 --listener-url http://<listener-ip>:9000
 ```
 
 Disable fullscreen:
 ```bash
-python backdoor-game/run_rca_defender.py --no-fullscreen --repo-url http://<server-ip>:8000
+python reverse-engineering/backdoor-game/run_rca_defender.py --no-fullscreen --repo-url http://<server-ip>:8000
 ```
 
 ## How the app works
@@ -101,7 +101,6 @@ Per-user app data directory:
 
 Cleaner tool:
 ```bash
-python backdoor-game/tools/cleaner.py --dry-run
-python backdoor-game/tools/cleaner.py
+python reverse-engineering/backdoor-game/tools/cleaner.py --dry-run
+python reverse-engineering/backdoor-game/tools/cleaner.py
 ```
-

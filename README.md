@@ -31,13 +31,15 @@ Welcome to the **Cybersecurity Projects** repository! This repository contains v
 
 ## 📂 Repository Structure
 ```
-Cybersecurity-Projects/
-│-- penetration-testing/
-│-- cryptography/
-│-- web-security/
-│-- network-security/
-│-- reverse-engineering/
-│-- README.md
+cybersecurity/
+├─ penetration-testing/
+├─ web-security/
+├─ network-security/
+├─ forensics/
+├─ reverse-engineering/
+├─ utilities/
+├─ docs/
+└─ README.md
 ```
 
 ## 💻 Requirements
@@ -68,4 +70,3 @@ For any queries, reach out via mugishapascal@gmail.com or open an issue in the r
 
 ---
 Happy Hacking! 🛡️
-

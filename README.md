@@ -2,7 +2,7 @@
 
 Welcome to the **Cybersecurity Projects** repository! This repository contains various cybersecurity-related projects, including penetration testing, cryptography, web security, network security, and reverse engineering.
 
-## 🔥 Projects Overview
+## Projects Overview
 
 ### 1. **Penetration Testing & Ethical Hacking**
 - Tools and scripts for ethical hacking
@@ -29,7 +29,7 @@ Welcome to the **Cybersecurity Projects** repository! This repository contains v
 - Understanding obfuscation techniques
 - Debugging applications using IDA Pro, Ghidra, or Radare2
 
-## 📂 Repository Structure
+## Repository Structure
 ```
 cybersecurity/
 ├─ penetration-testing/
@@ -42,13 +42,13 @@ cybersecurity/
 └─ README.md
 ```
 
-## 💻 Requirements
+## Requirements
 - Python 3.x / Bash / PowerShell (depending on the project)
 - Linux-based OS (Kali Linux recommended for pentesting tools)
 - Virtual Machine (VMware/VirtualBox) for safe testing
 - Penetration testing tools (Metasploit, Nmap, Wireshark, Burp Suite, etc.)
 
-## 🚀 Getting Started
+## Getting Started
 1. **Clone the repository:**
    ```sh
    git clone https://github.com/your-username/Cybersecurity-Projects.git
@@ -56,17 +56,17 @@ cybersecurity/
    ```
 2. **Navigate to a project folder and follow the instructions in its README file.**
 
-## ⚠️ Disclaimer
+## Disclaimer
 All scripts and tools in this repository are strictly for educational and ethical hacking purposes. **Do not use them on systems you do not own or have explicit permission to test.**
 
-## 📜 License
+## License
 This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 🤝 Contributing
+## Contributing
 Contributions are welcome! If you have improvements or new cybersecurity projects, feel free to submit a pull request.
 
-## 📧 Contact
+## Contact
 For any queries, reach out via mugishapascal@gmail.com or open an issue in the repository.
 
 ---
-Happy Hacking! 🛡️
+Happy hacking!

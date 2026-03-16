@@ -1,0 +1,5 @@
+# This project intentionally uses only the Python standard library (no pip deps).
+# Requirements:
+# - Python 3.9+
+# - Tkinter available (Ubuntu: sudo apt-get install python3-tk)
+

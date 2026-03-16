@@ -1,0 +1,30 @@
+TITLE: Suspicious Email Attachment
+PROMPT: You receive an email claiming to be from your bank with an attached file named "invoice.exe". What is the safest action?
+CORRECT: block
+ALLOW: Allowing executables from unexpected emails is risky. Prefer verifying the sender and using official channels.
+BLOCK: Correct. Do not run it. Report it as phishing and verify with the bank using official contacts.
+
+TITLE: Unknown USB Device
+PROMPT: You find a USB drive in the lab labeled "Exam Answers". What should you do?
+CORRECT: block
+ALLOW: Plugging in unknown media can introduce malware. Use approved scanning procedures instead.
+BLOCK: Correct. Hand it to the instructor/IT. Do not plug it in.
+
+TITLE: Software Update Pop-up
+PROMPT: A browser pop-up says "Update required" and offers an installer download. What is the safest action?
+CORRECT: block
+ALLOW: Installing from pop-ups can be malicious. Use the official app update mechanism.
+BLOCK: Correct. Close the pop-up and update from official settings or vendor website.
+
+TITLE: Strong Password Practice
+PROMPT: You are creating a new account. Should you reuse a password you already use elsewhere?
+CORRECT: block
+ALLOW: Reusing passwords increases impact of breaches. Use a unique password and a password manager.
+BLOCK: Correct. Use a unique password; consider a password manager.
+
+TITLE: Public Wi‑Fi Login
+PROMPT: You connect to a public Wi‑Fi and need to log in to an important service. What is the safest action?
+CORRECT: block
+ALLOW: Using sensitive accounts on public Wi‑Fi without protection increases risk. Prefer VPN/hotspot.
+BLOCK: Correct. Use a trusted VPN or your phone hotspot before logging in.
+

